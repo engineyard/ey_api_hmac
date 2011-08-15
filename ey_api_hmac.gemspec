@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Jacob Burkhart & Thorben Schröder & David Calavera & others"]
   s.email       = ["jacob@engineyard.com"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = %q{HMAC Rack basic implementation for Engine Yard services}
+  s.description = %q{basic wrapper for rack-client + middlewares for HMAC auth + helpers for SSO auth}
 
   s.rubyforge_project = "ey_api_hmac"
 
