@@ -30,5 +30,6 @@ PLATFORMS
 DEPENDENCIES
   ey_api_hmac!
   halorgium-auth-hmac
+  json
   rake
   rspec

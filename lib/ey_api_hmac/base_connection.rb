@@ -1,5 +1,6 @@
 require 'rack/client'
 require 'json'
+require 'time'
 
 module EY
   module ApiHMAC
@@ -11,8 +12,8 @@ module EY
         @auth_key = auth_key
         @standard_headers = {
             'CONTENT_TYPE' => 'application/json',
-            'Accept'=> 'application/json', 
-            "Date" => Time.now.to_s, #TODO: what is the right way to format this header?
+            'Accept' => 'application/json',
+            'Date' => Time.now.httpdate,
             'USER_AGENT' => user_agent || default_user_agent
         }
       end
@@ -50,11 +51,11 @@ module EY
       def post(url, body, &block)
         request(:post, url, body, &block)
       end
-      
+
       def put(url, body, &block)
         request(:put, url, body, &block)
       end
-      
+
       def delete(url, &block)
         request(:delete, url, &block)
       end

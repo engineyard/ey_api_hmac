@@ -4,6 +4,7 @@ source "http://rubygems.org"
 gemspec
 
 gem 'rake'
+gem 'json'
 
 group :test, :development do
   gem 'halorgium-auth-hmac'
