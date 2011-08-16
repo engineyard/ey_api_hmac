@@ -17,7 +17,7 @@ describe EY::ApiHMAC do
     end
 
     it "can sign sso calls" do
-      signed_url = EY::ApiHMAC.sign_for_sso(@url, @parameters, @auth_id, @auth_key)
+      signed_url = EY::ApiHMAC::SSO.sign(@url, @parameters, @auth_id, @auth_key)
       uri = URI.parse(signed_url)
 
       uri.scheme.should eq 'http'
@@ -29,9 +29,9 @@ describe EY::ApiHMAC do
     end
 
     it "can verify signed requests" do
-      signed_url = EY::ApiHMAC.sign_for_sso(@url, @parameters, @auth_id, @auth_key)
-      EY::ApiHMAC.verify_for_sso(signed_url,  @auth_id, @auth_key).should be_true
-      EY::ApiHMAC.verify_for_sso(signed_url + 'a',  @auth_id, @auth_key).should be_false
+      signed_url = EY::ApiHMAC::SSO.sign(@url, @parameters, @auth_id, @auth_key)
+      EY::ApiHMAC::SSO.authenticated?(signed_url,  @auth_id, @auth_key).should be_true
+      EY::ApiHMAC::SSO.authenticated?(signed_url + 'a',  @auth_id, @auth_key).should be_false
     end
 
     #TODO: write a test that fails if we skip the CGI.unescape

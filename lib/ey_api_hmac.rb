@@ -1,25 +1,10 @@
 require 'ey_api_hmac/base_connection'
 require 'ey_api_hmac/api_auth'
+require 'ey_api_hmac/sso'
 
 module EY
   module ApiHMAC
     require 'openssl'
-
-    def self.sign_for_sso(url, parameters, auth_id, auth_key)
-      uri = URI.parse(url)
-      raise ArgumentError, "use parameters argument, got query: '#{uri.query}'" if uri.query
-      uri.query = parameters.sort.map {|e| e.map{|str| CGI.escape(str.to_s)}.join '='}.join '&'
-      signature = CGI.escape(base64digest(uri.query.to_s, auth_key))
-      uri.query += "&signature=#{signature}"
-      uri.to_s
-    end
-
-    def self.verify_for_sso(url, auth_id, auth_key)
-      uri = URI.parse(url)
-      signature = CGI.unescape(uri.query.match(/&signature=(.*)$/)[1])
-      signed_string = uri.query.gsub(/&signature=(.*)$/,"")
-      base64digest(signed_string.to_s, auth_key) == signature
-    end
 
     def self.sign!(env, key_id, secret, strict = false)
       env["HTTP_AUTHORIZATION"] = "AuthHMAC #{key_id}:#{signature(env, secret, strict)}"
