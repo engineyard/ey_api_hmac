@@ -25,7 +25,8 @@ describe EY::ApiHMAC do
       uri.path.should eq '/sign_test'
 
       parameters = CGI::parse(uri.query)
-      parameters["signature"].first.should eq EY::ApiHMAC.base64digest("foo=bar&xargs=5&zarg=boot", @auth_key)
+      parameters["signature"].first.should eq EY::ApiHMAC::SSO.signature_param(
+        "http://example.com/sign_test?foo=bar&xargs=5&zarg=boot", @auth_id, @auth_key)
     end
 
     it "can verify signed requests" do
@@ -34,19 +35,29 @@ describe EY::ApiHMAC do
       EY::ApiHMAC::SSO.authenticated?(signed_url + 'a',  @auth_id, @auth_key).should be_false
     end
 
+    it "catches changes to the url" do
+      signed_url = EY::ApiHMAC::SSO.sign(@url, @parameters, @auth_id, @auth_key)
+      EY::ApiHMAC::SSO.authenticated?(signed_url,  @auth_id, @auth_key).should be_true
+      tampered_url = signed_url.gsub("sign_test", "admin")
+      EY::ApiHMAC::SSO.authenticated?(tampered_url,  @auth_id, @auth_key).should be_false
+    end
+
+    it "catches changes to the parameters" do
+      signed_url = EY::ApiHMAC::SSO.sign(@url, @parameters, @auth_id, @auth_key)
+      EY::ApiHMAC::SSO.authenticated?(signed_url,  @auth_id, @auth_key).should be_true
+      tampered_url = signed_url.gsub("foo", "fool")
+      EY::ApiHMAC::SSO.authenticated?(tampered_url,  @auth_id, @auth_key).should be_false
+    end
+
     #TODO: write a test that fails if we skip the CGI.unescape
 
     #TODO: provide signature methods
 
     #TODO: test that you get an error when you try to sign a url with any of the "Reserved" parameters (signature or timestamp)
 
-    #TODO: send the auth_id in the params too
-
     #TODO: Rename "signature" to "ey_api_sso_hmac_signature"
 
-    #TODO: provide a time
-
-    #TODO: maybe an expiry time would be better
+    #TODO: provide a timestamp? maybe an expiry time would be better
 
     #TODO: should the other params be part of the gem?
       # ey_user_id – the unique identifier for the user.

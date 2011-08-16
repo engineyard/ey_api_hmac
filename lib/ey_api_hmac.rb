@@ -7,7 +7,7 @@ module EY
     require 'openssl'
 
     def self.sign!(env, key_id, secret, strict = false)
-      env["HTTP_AUTHORIZATION"] = "AuthHMAC #{key_id}:#{signature(env, secret, strict)}"
+      env["HTTP_AUTHORIZATION"] = auth_string(key_id, signature(env, secret, strict))
     end
 
     def self.canonical_string(env, strict = false)
@@ -28,6 +28,10 @@ module EY
       adder["HTTP_DATE"]
       adder["PATH_INFO"]
       parts.join("\n")
+    end
+
+    def self.auth_string(key_id, signature)
+      "AuthHMAC #{key_id}:#{signature}"
     end
 
     def self.signature(env, secret, strict = false)
