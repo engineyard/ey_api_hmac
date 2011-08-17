@@ -2,6 +2,8 @@ require 'rack/client'
 require 'json'
 require 'time'
 
+puts "using the one in path!"
+
 module EY
   module ApiHMAC
     class BaseConnection
@@ -13,7 +15,7 @@ module EY
         @standard_headers = {
             'CONTENT_TYPE' => 'application/json',
             'Accept' => 'application/json',
-            'Date' => Time.now.httpdate,
+            'HTTP_DATE' => Time.now.httpdate,
             'USER_AGENT' => user_agent || default_user_agent
         }
       end
