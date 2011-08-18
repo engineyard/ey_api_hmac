@@ -54,12 +54,19 @@ module EY
 
       # Client middleware that's used to add authentication to requests.
       class Client
+        class AuthFailure < RuntimeError
+        end
+
         def initialize(app, auth_id, auth_key)
           @app, @auth_id, @auth_key = app, auth_id, auth_key
         end
         def call(env)
           ApiHMAC.sign!(env, @auth_id, @auth_key)
-          @app.call(env)
+          tuple = @app.call(env)
+          if tuple.first.to_i == 401
+            raise AuthFailure, "HMAC Authentication Failed."
+          end
+          tuple
         end
       end
 

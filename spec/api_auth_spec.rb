@@ -112,6 +112,7 @@ describe EY::ApiHMAC::ApiAuth do
           run MockApp.call(true, 'key')
         end
 
+        # no HMAC client means no nice exception for 401s
         response = client.get('/')
         response.status.should == 401
         response.body.should_not == 'Success'
@@ -134,9 +135,7 @@ describe EY::ApiHMAC::ApiAuth do
 
         client = hmac_client('wrongkey', MockApp.call(is_found, 'rightkey'))
 
-        response = client.get('/')
-        response.status.should == 401
-        response.body.should_not == 'Success'
+        lambda { client.get('/') }.should raise_error(EY::ApiHMAC::ApiAuth::Client::AuthFailure)
       end
 
       it "fails when no consumer by that auth_id is found" do
@@ -146,9 +145,7 @@ describe EY::ApiHMAC::ApiAuth do
 
         client = hmac_client(auth_key, MockApp.call(is_found, auth_key))
 
-        response = client.get('/')
-        response.status.should == 401
-        response.body.should_not == 'Success'
+        lambda { client.get('/') }.should raise_error(EY::ApiHMAC::ApiAuth::Client::AuthFailure)
       end
     end
   end
