@@ -69,5 +69,4 @@ describe EY::ApiHMAC do
       # signature – HMAC digest of the other parameters and url (using the API secret)
 
   end
-  
 end

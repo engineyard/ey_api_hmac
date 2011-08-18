@@ -1,5 +1,9 @@
+require 'spec_helper'
+
 require 'ey_api_hmac'
 require 'auth-hmac'
+require 'rack/contrib'
+require 'time'
 
 describe EY::ApiHMAC::ApiAuth do
 
@@ -10,8 +14,8 @@ describe EY::ApiHMAC::ApiAuth do
     before(:each) do
       @env = {'PATH_INFO' => "/path/to/put",
         'QUERY_STRING' => 'foo=bar&bar=foo',
-        'CONTENT_TYPE' => 'text/plain', 
-        'HTTP_CONTENT_MD5' => 'blahblah', 
+        'CONTENT_TYPE' => 'text/plain',
+        'HTTP_CONTENT_MD5' => 'blahblah',
         'REQUEST_METHOD' => "PUT",
         'HTTP_DATE' => "Thu, 10 Jul 2008 03:29:56 GMT",
         "rack.input" => StringIO.new}
@@ -40,8 +44,8 @@ describe EY::ApiHMAC::ApiAuth do
       end
 
       it "signs as expected with AuthHMAC" do
-       AuthHMAC.sign!(@request, "my-key-id", "secret")
-       @request['Authorization'].should == @expected
+        AuthHMAC.sign!(@request, "my-key-id", "secret")
+        @request['Authorization'].should == @expected
       end
 
       it "signs as expected with ApiAuth" do
@@ -85,13 +89,76 @@ describe EY::ApiHMAC::ApiAuth do
       end
     end
 
+    describe "middleware behavior" do
+      MockApp = lambda do |is_found, auth_key|
+        Rack::Builder.new do
+          use EY::ApiHMAC::ApiAuth::Server, MockAuth.new(is_found, auth_key)
+          run lambda { |x| [200, {}, ['Success']] }
+        end
+      end
+
+      def hmac_client(client_auth_key, app)
+        client = Rack::Client.new('http://localhost') do
+          use Rack::Config do |env|
+            env['HTTP_DATE'] = Time.now.httpdate
+          end
+          use EY::ApiHMAC::ApiAuth::Client, 1, client_auth_key
+          run app
+        end
+      end
+
+      it "responds 401 Unauthorized with no authorization" do
+        client = Rack::Client.new('http://localhost') do
+          run MockApp.call(true, 'key')
+        end
+
+        response = client.get('/')
+        response.status.should == 401
+        response.body.should_not == 'Success'
+      end
+
+      it "works with correct signing" do
+        auth_key = 'key'
+        is_found = true
+
+        client = hmac_client(auth_key, MockApp.call(is_found, auth_key))
+
+        response = client.get('/')
+        response.status.should == 200
+        response.body.should == 'Success'
+      end
+
+      it "fails when auth_key isn't correct" do
+        auth_id  = 1
+        is_found = true
+
+        client = hmac_client('wrongkey', MockApp.call(is_found, 'rightkey'))
+
+        response = client.get('/')
+        response.status.should == 401
+        response.body.should_not == 'Success'
+      end
+
+      it "fails when no consumer by that auth_id is found" do
+        auth_id  = 1
+        is_found = false
+        auth_key = 'key'
+
+        client = hmac_client(auth_key, MockApp.call(is_found, auth_key))
+
+        response = client.get('/')
+        response.status.should == 401
+        response.body.should_not == 'Success'
+      end
+    end
   end
+
 
   describe "without CONTENT_MD5" do
     before do
       @env = {'PATH_INFO' => "/path/to/put",
         'QUERY_STRING' => 'foo=bar&bar=foo',
-        'CONTENT_TYPE' => 'text/plain', 
+        'CONTENT_TYPE' => 'text/plain',
         'REQUEST_METHOD' => "PUT",
         'HTTP_DATE' => "Thu, 10 Jul 2008 03:29:56 GMT",
         "rack.input" => StringIO.new("something, something?")}
@@ -114,7 +181,6 @@ describe EY::ApiHMAC::ApiAuth do
       end
 
     end
-
   end
 
   it "complains when there is no HTTP_DATE" do

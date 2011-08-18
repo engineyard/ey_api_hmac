@@ -8,4 +8,6 @@ gem 'json'
 
 group :test, :development do
   gem 'halorgium-auth-hmac'
+  gem 'rack-client'
+  gem 'rack-contrib'
 end
