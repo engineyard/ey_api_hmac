@@ -2,8 +2,6 @@ require 'rack/client'
 require 'json'
 require 'time'
 
-puts "using the one in path!"
-
 module EY
   module ApiHMAC
     class BaseConnection
