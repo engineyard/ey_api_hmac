@@ -5,7 +5,7 @@ module EY
       def self.sign(url, parameters, auth_id, auth_key)
         uri = URI.parse(url)
         raise ArgumentError, "use parameters argument, got query: '#{uri.query}'" if uri.query
-        uri.query = parameters.sort.map {|e| e.map{|str| CGI.escape(str.to_s)}.join '='}.join '&'
+        uri.query = parameters.sort_by(&:to_s).map {|e| e.map{|str| CGI.escape(str.to_s)}.join '='}.join '&'
         signature = CGI.escape(signature_param(uri.to_s, auth_id, auth_key))
         uri.query += "&signature=#{signature}"
         uri.to_s
