@@ -7,7 +7,7 @@ module EY
     class BaseConnection
       attr_reader :auth_id, :auth_key
 
-      def initialize(auth_id, auth_key, user_agent = nil)
+      def initialize(auth_id, auth_key, user_agent = nil, &rack_builder_block)
         @auth_id = auth_id
         @auth_key = auth_key
         @standard_headers = {
@@ -16,6 +16,7 @@ module EY
             'HTTP_DATE' => Time.now.httpdate,
             'USER_AGENT' => user_agent || default_user_agent
         }
+        @rack_builder_block = rack_builder_block
       end
 
       class NotFound < StandardError
@@ -71,8 +72,12 @@ module EY
         #damn you scope!
         auth_id_arg = auth_id
         auth_key_arg = auth_key
+        rack_builder_block = @rack_builder_block
         @client ||= Rack::Client.new do
           use EY::ApiHMAC::ApiAuth::Client, auth_id_arg, auth_key_arg
+          if rack_builder_block
+            instance_eval(&rack_builder_block)
+          end
           run bak
         end
       end
