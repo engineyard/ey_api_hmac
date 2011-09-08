@@ -11,12 +11,16 @@ module EY
         @auth_id = auth_id
         @auth_key = auth_key
         @standard_headers = {
-            'CONTENT_TYPE' => 'application/json',
-            'Accept' => 'application/json',
-            'HTTP_DATE' => Time.now.httpdate,
-            'USER_AGENT' => user_agent || default_user_agent
+          'CONTENT_TYPE' => 'application/json',
+          'Accept' => 'application/json',
+          'HTTP_DATE' => Time.now.httpdate,
+          'USER_AGENT' => user_agent || default_user_agent
         }
         @rack_builder_block = rack_builder_block
+      end
+
+      def default_user_agent
+        "ApiHMAC"
       end
 
       class NotFound < StandardError
@@ -65,7 +69,11 @@ module EY
         request(:get, url, &block)
       end
 
-      protected
+      def handle_errors_with(error_handler)
+        @error_handler = error_handler
+      end
+
+    protected
 
       def client
         bak = self.backend
@@ -83,19 +91,33 @@ module EY
       end
 
       def request(method, url, body = nil, &block)
+        response = nil
+        request_headers = @standard_headers
         if body
-          response = client.send(method, url, @standard_headers, body.to_json)
+          response = client.send(method, url, request_headers, body.to_json)
         else
-          response = client.send(method, url, @standard_headers)
+          response = client.send(method, url, request_headers)
         end
         handle_response(url, response, &block)
+      rescue => e
+        request_hash = {:method => method, :url => url, :headers => request_headers, :body => body}
+        response_hash = {:status => response.status, :body => response.body} if response
+        handle_error(request_hash, (response_hash || {}), e) || (raise e)
+      end
+
+      def handle_error(request, response, exception)
+        if @error_handler
+          @error_handler.call(request, response, exception)
+        end
       end
 
       def handle_response(url, response)
         case response.status
         when 200, 201
-          json_body = JSON.parse(response.body)
-          yield json_body, response["Location"] if block_given?
+          if block_given?
+            json_body = JSON.parse(response.body)
+            yield json_body, response["Location"]
+          end
         when 404
           raise NotFound.new(url)
         when 400
