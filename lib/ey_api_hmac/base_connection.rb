@@ -69,7 +69,7 @@ module EY
         request(:get, url, &block)
       end
 
-      def handle_errors_with(error_handler)
+      def handle_errors_with(&error_handler)
         @error_handler = error_handler
       end
 
@@ -101,7 +101,7 @@ module EY
         handle_response(url, response, &block)
       rescue => e
         request_hash = {:method => method, :url => url, :headers => request_headers, :body => body}
-        response_hash = {:status => response.status, :body => response.body} if response
+        response_hash = {:status => response.status, :body => response.body, :headers => response.headers} if response
         handle_error(request_hash, (response_hash || {}), e) || (raise e)
       end
 

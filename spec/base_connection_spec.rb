@@ -17,19 +17,27 @@ describe EY::ApiHMAC::BaseConnection do
       end
       it "calls the error handler if one is registered" do
         errors = []
-        @connection.handle_errors_with(lambda {|*args| errors << [args]; "handled"})
+        @connection.handle_errors_with{|*args| errors << [args]; "handled"}
         @connection.post("/", "blah").should eq("handled")
       end
     end
     describe "on bad body" do
       it "calls the error handler" do
         @connection.backend = lambda do |env|
-          ["200", {"Content-Type" => "application/json"}, "200 OK"]
+          ["200", {"Content-Type" => "application/json"}, ["200 OK"]]
         end
         errors = []
-        @connection.handle_errors_with(lambda {|*args| errors << [args]; false})
+        @connection.handle_errors_with{|*args| errors << args; false}
         lambda { @connection.post("/", "blah") {} }.should raise_exception(JSON::ParserError)
         errors.should_not be_empty
+        request, response, exception = *errors.first
+        request[:url].should eq("/")
+        request[:body].should eq("blah")
+        request[:method].should eq :post
+        request[:headers]["Accept"].should eq "application/json"
+        response[:status].should eq 200
+        response[:body].should eq("200 OK")
+        response[:headers].should eq({"Content-Type" => "application/json"})
       end
     end
   end
