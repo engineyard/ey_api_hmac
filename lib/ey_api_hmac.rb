@@ -74,6 +74,7 @@ module EY
     private
 
     def self.generated_md5(env)
+      env["rack.input"].rewind
       request_body = env["rack.input"].read
       env["rack.input"].rewind
       OpenSSL::Digest::MD5.hexdigest(request_body)
