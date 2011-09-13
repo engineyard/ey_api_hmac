@@ -11,6 +11,37 @@ describe EY::ApiHMAC::ApiAuth do
 
   describe "AuthHMAC working" do
 
+    it "works for documented/realistic example" do
+      env = {'PATH_INFO' => "/api/1/service_accounts/1324/messages",
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_ACCEPT' => 'application/json',
+        'REQUEST_METHOD' => "POST",
+        'HTTP_DATE' => Time.now.httpdate,
+        "rack.input" => StringIO.new(
+          %q{{"message":{"message_type":"status","subject":"Everything looks good.","body":null}}})}
+
+      puts "before signed: \n#{env.inspect}\n\n"
+
+      auth_id = "123bc211233eabc"
+      auth_key = "abc474e3fc9bddf6d41236b70cc5a952f3681166e1239214740d13eecd12318f7b8d27123b61eabc"
+
+      puts "auth_id: #{auth_id}"
+      puts "auth_key: #{auth_key}\n\n"
+
+      canonical_string = EY::ApiHMAC.canonical_string(env)
+      puts "canonical_string: \n#{canonical_string.inspect}\n\n"
+
+      signature = EY::ApiHMAC.signature(env, auth_key)
+      puts "signature: \n#{signature}\n\n"
+
+      EY::ApiHMAC.sign!(env, auth_id, auth_key)
+      puts "now signed: \n#{env.inspect}\n\n"
+
+      lookup = Proc.new{ |key| auth_key if key == auth_id }
+
+      EY::ApiHMAC.authenticated?(env, &lookup).should be_true
+    end
+
     before(:each) do
       @env = {'PATH_INFO' => "/path/to/put",
         'QUERY_STRING' => 'foo=bar&bar=foo',
