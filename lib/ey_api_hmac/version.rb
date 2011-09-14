@@ -1,5 +1,5 @@
 module EY
   module ApiHMAC
-    VERSION = "0.0.12.pre"
+    VERSION = "0.0.12"
   end
 end
