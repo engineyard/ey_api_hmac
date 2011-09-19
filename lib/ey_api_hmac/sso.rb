@@ -4,7 +4,11 @@ module EY
 
       def self.sign(url, parameters, auth_id, auth_key)
         uri = URI.parse(url)
-        raise ArgumentError, "use parameters argument, got query: '#{uri.query}'" if uri.query
+        if uri.query
+          extra_params = CGI.parse(uri.query)
+          verify_params!(extra_params, parameters)
+          parameters.merge!(extra_params)
+        end
         uri.query = parameters.sort_by(&:to_s).map {|e| e.map{|str| CGI.escape(str.to_s)}.join '='}.join '&'
         signature = CGI.escape(signature_param(uri.to_s, auth_id, auth_key))
         uri.query += "&signature=#{signature}"
@@ -20,6 +24,15 @@ module EY
 
       def self.signature_param(signed_string, auth_id, auth_key)
         ApiHMAC.auth_string(auth_id, ApiHMAC.base64digest(signed_string, auth_key))
+      end
+
+      private
+
+      def self.verify_params!(extra_params, parameters)
+        illegal_query_params = parameters.keys.map(&:to_s) + ["signature"]
+        extra_params.keys.each do |k|
+          raise ArgumentError, "Got illegal paramter: '#{k}' in '#{url}'" if illegal_query_params.include?(k.to_s)
+        end
       end
 
     end

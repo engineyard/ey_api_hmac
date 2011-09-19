@@ -49,6 +49,19 @@ describe EY::ApiHMAC do
       EY::ApiHMAC::SSO.authenticated?(tampered_url,  @auth_id, @auth_key).should be_false
     end
 
+    it "can sign and verify urls with parameters" do
+      url_with_params = "http://example.com/sign_test?baz=bert&stuff=awesome"
+      signed_url = EY::ApiHMAC::SSO.sign(url_with_params, @parameters, @auth_id, @auth_key)
+      EY::ApiHMAC::SSO.authenticated?(signed_url,  @auth_id, @auth_key).should be_true
+    end
+
+    it "raises when the same parameter appears both in query and in arg" do
+      url = "http://example.com/sign_test?foo=bar"
+      lambda{
+        EY::ApiHMAC::SSO.sign(url, @parameters, @auth_id, @auth_key)
+      }.should raise_error(/foo/)
+    end
+
     #TODO: write a test that fails if we skip the CGI.unescape
 
     #TODO: provide signature methods
