@@ -89,7 +89,9 @@ module EY
         response = nil
         request_headers = @standard_headers
         if body
-          response = client.send(method, url, request_headers, body.to_json)
+          body_json = body.to_json
+          request_headers["CONTENT_LENGTH"] = body_json.size.to_s
+          response = client.send(method, url, request_headers, body_json)
         else
           response = client.send(method, url, request_headers)
         end
