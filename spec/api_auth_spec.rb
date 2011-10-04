@@ -13,7 +13,8 @@ describe EY::ApiHMAC::ApiAuth do
 
     it "works for documented/realistic example" do
       req_body = %q{{"message":{"message_type":"status","subject":"Everything looks good.","body":null}}}
-      env = {'PATH_INFO' => "/api/1/service_accounts/1324/messages",
+      env = {'REQUEST_URI' => "http://example.com/api/1/service_accounts/1324/messages",
+        'PATH_INFO' => "/api/1/service_accounts/1324/messages",
         'CONTENT_TYPE' => 'application/json',
         'HTTP_ACCEPT' => 'application/json',
         'REQUEST_METHOD' => "POST",
@@ -44,10 +45,11 @@ describe EY::ApiHMAC::ApiAuth do
     end
 
     before(:each) do
-      @env = {'PATH_INFO' => "/path/to/put",
+      @env = {'REQUEST_URI' => "http://example.com/path/to/put",
+        'PATH_INFO' => "/path/to/put",
         'QUERY_STRING' => 'foo=bar&bar=foo',
         'CONTENT_TYPE' => 'text/plain',
-        'HTTP_CONTENT_MD5' => 'blahblah',
+        'HTTP_CONTENT_MD5' => 'd41d8cd98f00b204e9800998ecf8427e',
         'REQUEST_METHOD' => "PUT",
         'HTTP_DATE' => "Thu, 10 Jul 2008 03:29:56 GMT",
         "rack.input" => StringIO.new}
@@ -56,7 +58,7 @@ describe EY::ApiHMAC::ApiAuth do
 
     describe ".canonical_string" do
       it "should generate a canonical string using default method" do
-        expected = "PUT\ntext/plain\nblahblah\nThu, 10 Jul 2008 03:29:56 GMT\n/path/to/put"
+        expected = "PUT\ntext/plain\nd41d8cd98f00b204e9800998ecf8427e\nThu, 10 Jul 2008 03:29:56 GMT\n/path/to/put"
         AuthHMAC.canonical_string(@request).should == expected
         EY::ApiHMAC.canonical_string(@env).should == expected
       end
@@ -64,7 +66,7 @@ describe EY::ApiHMAC::ApiAuth do
 
     describe ".signature" do
       it "should generate a valid signature string for a secret" do
-        expected = "71wAJM4IIu/3o6lcqx/tw7XnAJs="
+        expected = "isJ7zHHPrpnSdZ/XbvqxFhVUf0c="
         AuthHMAC.signature(@request, 'secret').should == expected
         EY::ApiHMAC.signature(@env, 'secret').should == expected
       end
@@ -72,7 +74,7 @@ describe EY::ApiHMAC::ApiAuth do
 
     describe "sign!" do
       before do
-        @expected = "AuthHMAC my-key-id:71wAJM4IIu/3o6lcqx/tw7XnAJs="
+        @expected = "AuthHMAC my-key-id:isJ7zHHPrpnSdZ/XbvqxFhVUf0c="
       end
 
       it "signs as expected with AuthHMAC" do
@@ -185,7 +187,8 @@ describe EY::ApiHMAC::ApiAuth do
 
   describe "without CONTENT_MD5" do
     before do
-      @env = {'PATH_INFO' => "/path/to/put",
+      @env = {'REQUEST_URI' => "http://example.com/path/to/put",
+        'PATH_INFO' => "/path/to/put",
         'QUERY_STRING' => 'foo=bar&bar=foo',
         'CONTENT_TYPE' => 'text/plain',
         'REQUEST_METHOD' => "PUT",
@@ -213,7 +216,8 @@ describe EY::ApiHMAC::ApiAuth do
   end
 
   it "complains when there is no HTTP_DATE" do
-    env = {'PATH_INFO' => "/path/to/put",
+    env = {'REQUEST_URI' => "http://example.com/path/to/put",
+      'PATH_INFO' => "/path/to/put",
       'QUERY_STRING' => 'foo=bar&bar=foo',
       'CONTENT_TYPE' => 'text/plain',
       'REQUEST_METHOD' => "PUT",

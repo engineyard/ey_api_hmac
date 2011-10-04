@@ -12,21 +12,17 @@ module EY
 
     def self.canonical_string(env)
       parts = []
-      adder = Proc.new do |var|
+      expect = Proc.new do |var|
         unless env[var]
           raise HmacAuthFail, "'#{var}' header missing and required in #{env.inspect}"
         end
-        parts << env[var]
+        env[var]
       end
-      adder["REQUEST_METHOD"]
-      adder["CONTENT_TYPE"]
-      if env["HTTP_CONTENT_MD5"]
-        adder["HTTP_CONTENT_MD5"]
-      else
-        parts << generated_md5(env)
-      end
-      adder["HTTP_DATE"]
-      adder["PATH_INFO"]
+      parts << expect["REQUEST_METHOD"]
+      parts << expect["CONTENT_TYPE"]
+      parts << generated_md5(env)
+      parts << expect["HTTP_DATE"]
+      parts << URI.parse(expect["REQUEST_URI"]).path
       parts.join("\n")
     end
 
