@@ -26,7 +26,7 @@ module EY
         parts << generated_md5(env)
       end
       adder["HTTP_DATE"]
-      adder["PATH_INFO"]
+      parts << URI.parse(env["REQUEST_URI"]).path
       parts.join("\n")
     end
 
