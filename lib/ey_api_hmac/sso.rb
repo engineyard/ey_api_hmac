@@ -6,7 +6,7 @@ module EY
         uri = URI.parse(url)
         if uri.query
           extra_params = CGI.parse(uri.query)
-          verify_params!(extra_params, parameters)
+          verify_params!(url, extra_params, parameters)
           parameters.merge!(extra_params)
         end
         uri.query = parameters.sort_by(&:to_s).map {|e| e.map{|str| CGI.escape(str.to_s)}.join '='}.join '&'
@@ -28,7 +28,7 @@ module EY
 
       private
 
-      def self.verify_params!(extra_params, parameters)
+      def self.verify_params!(url, extra_params, parameters)
         illegal_query_params = parameters.keys.map(&:to_s) + ["signature"]
         extra_params.keys.each do |k|
           raise ArgumentError, "Got illegal paramter: '#{k}' in '#{url}'" if illegal_query_params.include?(k.to_s)
