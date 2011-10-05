@@ -12,15 +12,16 @@ describe EY::ApiHMAC::ApiAuth do
   describe "AuthHMAC working" do
 
     it "works for documented/realistic example" do
+      req_body = %q{{"message":{"message_type":"status","subject":"Everything looks good.","body":null}}}
       env = {'PATH_INFO' => "/api/1/service_accounts/1324/messages",
         'CONTENT_TYPE' => 'application/json',
         'HTTP_ACCEPT' => 'application/json',
         'REQUEST_METHOD' => "POST",
         'HTTP_DATE' => Time.now.httpdate,
-        "rack.input" => StringIO.new(
-          %q{{"message":{"message_type":"status","subject":"Everything looks good.","body":null}}})}
+        "rack.input" => StringIO.new(req_body)}
 
       puts "before signed: \n#{env.inspect}\n\n"
+      puts "request body: \n#{req_body}\n\n"
 
       auth_id = "123bc211233eabc"
       auth_key = "abc474e3fc9bddf6d41236b70cc5a952f3681166e1239214740d13eecd12318f7b8d27123b61eabc"
@@ -218,7 +219,7 @@ describe EY::ApiHMAC::ApiAuth do
       'REQUEST_METHOD' => "PUT",
       "rack.input" => StringIO.new}
     lambda{
-      EY::ApiHMAC.sign!(env, 'my-key-id', 'secret', true)
+      EY::ApiHMAC.sign!(env, 'my-key-id', 'secret')
     }.should raise_error(/'HTTP_DATE' header missing and required/)
   end
 

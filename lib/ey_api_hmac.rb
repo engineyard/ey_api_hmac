@@ -6,11 +6,11 @@ module EY
   module ApiHMAC
     require 'openssl'
 
-    def self.sign!(env, key_id, secret, strict = false)
-      env["HTTP_AUTHORIZATION"] = auth_string(key_id, signature(env, secret, strict))
+    def self.sign!(env, key_id, secret)
+      env["HTTP_AUTHORIZATION"] = auth_string(key_id, signature(env, secret))
     end
 
-    def self.canonical_string(env, strict = false)
+    def self.canonical_string(env)
       parts = []
       adder = Proc.new do |var|
         unless env[var]
@@ -34,8 +34,8 @@ module EY
       "AuthHMAC #{key_id}:#{signature}"
     end
 
-    def self.signature(env, secret, strict = false)
-      base64digest(canonical_string(env, strict), secret)
+    def self.signature(env, secret)
+      base64digest(canonical_string(env), secret)
     end
 
     def self.base64digest(data,secret)
@@ -55,7 +55,7 @@ module EY
           raise HmacAuthFail, "couldn't find auth for #{access_key_id}"
         end
         unless hmac == signature(env, secret)
-          raise HmacAuthFail, "signature mismatch"
+          raise HmacAuthFail, "signature mismatch. Calculated canonical_string: #{canonical_string(env).inspect}"
         end
       else
         raise HmacAuthFail, "no authorization header"

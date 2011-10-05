@@ -18,8 +18,8 @@ module EY
             ApiHMAC.authenticate!(env) do |auth_id|
               @lookup.call(env, auth_id)
             end
-          rescue HmacAuthFail
-            return [401, {}, ["Authentication failure"]]
+          rescue HmacAuthFail => e
+            return [401, {}, ["Authentication failure: #{e.message}"]]
           end
           @app.call(env)
         end
@@ -64,7 +64,7 @@ module EY
           ApiHMAC.sign!(env, @auth_id, @auth_key)
           tuple = @app.call(env)
           if tuple.first.to_i == 401
-            raise AuthFailure, "HMAC Authentication Failed."
+            raise AuthFailure, "HMAC Authentication Failed: #{tuple.last}"
           end
           tuple
         end
