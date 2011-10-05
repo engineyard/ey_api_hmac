@@ -22,7 +22,11 @@ module EY
       parts << expect["CONTENT_TYPE"]
       parts << generated_md5(env)
       parts << expect["HTTP_DATE"]
-      parts << URI.parse(expect["REQUEST_URI"]).path
+      if env["REQUEST_URI"]
+        parts << URI.parse(env["REQUEST_URI"]).path
+      else
+        parts << expect["PATH_INFO"]
+      end
       parts.join("\n")
     end
 

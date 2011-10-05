@@ -64,7 +64,9 @@ module EY
           ApiHMAC.sign!(env, @auth_id, @auth_key)
           tuple = @app.call(env)
           if tuple.first.to_i == 401
-            raise AuthFailure, "HMAC Authentication Failed: #{tuple.last}"
+            response_body = ""
+            tuple.last.each{ |v| response_body << v }
+            raise AuthFailure, "HMAC Authentication Failed: #{response_body}"
           end
           tuple
         end
