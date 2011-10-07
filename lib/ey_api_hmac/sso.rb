@@ -9,7 +9,7 @@ module EY
           verify_params!(url, extra_params, parameters)
           parameters.merge!(extra_params)
         end
-        uri.query = parameters.sort_by(&:to_s).map {|e| e.map{|str| CGI.escape(str.to_s)}.join '='}.join '&'
+        uri.query = params_to_string(parameters)
         signature = CGI.escape(signature_param(uri.to_s, auth_id, auth_key))
         uri.query += "&signature=#{signature}"
         uri.to_s
@@ -17,9 +17,10 @@ module EY
 
       def self.authenticated?(url, auth_id, auth_key)
         uri = URI.parse(url)
-        signature = CGI.unescape(uri.query.match(/&signature=(.*)$/)[1])
-        signed_string = uri.to_s.gsub(/&signature=(.*)$/,"")
-        signature_param(signed_string.to_s, auth_id, auth_key) == signature
+        query_params = CGI::parse(uri.query)
+        signature = query_params.delete("signature").to_s
+        uri.query = params_to_string(query_params)
+        signature == signature_param(uri.to_s, auth_id, auth_key)
       end
 
       def self.signature_param(signed_string, auth_id, auth_key)
@@ -27,6 +28,10 @@ module EY
       end
 
       private
+
+      def self.params_to_string(parameters)
+        parameters.sort_by(&:to_s).map {|e| e.map{|str| CGI.escape(str.to_s)}.join '='}.join '&'
+      end
 
       def self.verify_params!(url, extra_params, parameters)
         illegal_query_params = parameters.keys.map(&:to_s) + ["signature"]
