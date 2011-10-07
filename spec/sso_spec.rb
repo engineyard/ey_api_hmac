@@ -35,6 +35,10 @@ describe EY::ApiHMAC do
       EY::ApiHMAC::SSO.authenticated?(signed_url + 'a',  @auth_id, @auth_key).should be_false
     end
 
+    it "can verify requests with no query as invalid" do
+      EY::ApiHMAC::SSO.authenticated?("http://example.com/sign_test",  @auth_id, @auth_key).should be_false
+    end
+
     it "catches changes to the url" do
       signed_url = EY::ApiHMAC::SSO.sign(@url, @parameters, @auth_id, @auth_key)
       EY::ApiHMAC::SSO.authenticated?(signed_url,  @auth_id, @auth_key).should be_true

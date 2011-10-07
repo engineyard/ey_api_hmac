@@ -17,6 +17,7 @@ module EY
 
       def self.authenticated?(url, auth_id, auth_key)
         uri = URI.parse(url)
+        return false unless uri.query
         query_params = CGI::parse(uri.query)
         signature = query_params.delete("signature").to_s
         uri.query = params_to_string(query_params)
