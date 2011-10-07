@@ -66,6 +66,15 @@ describe EY::ApiHMAC do
       }.should raise_error(/foo/)
     end
 
+    it "verifies this random real-world use case" do
+      auth_id = "676f8731f9d3bfd0"
+      auth_key = "b7c65a18f6955d58f06a439fb881d1565c17e840999500f2aed6859144de5bac4d1a670119c9b7a9"
+
+      url = "http://ec2-107-22-254-37.compute-1.amazonaws.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Faccounts%2F10398%2Fservices&ey_user_id=10133&ey_user_name=Jacob+Chronatog-Demo+Burkhart&timestamp=2011-10-07T23%3A15%3A50%2B00%3A00&signature=AuthHMAC+676f8731f9d3bfd0%3AnvsCICd%2F00dvFCpJYfvI9LTl81s%3D"
+
+      EY::ApiHMAC::SSO.authenticated?(url, auth_id, auth_key).should be_true
+    end
+
     #TODO: write a test that fails if we skip the CGI.unescape
 
     #TODO: provide signature methods

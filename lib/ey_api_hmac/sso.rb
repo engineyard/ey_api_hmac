@@ -18,10 +18,11 @@ module EY
       def self.authenticated?(url, auth_id, auth_key)
         uri = URI.parse(url)
         return false unless uri.query
-        query_params = CGI::parse(uri.query)
-        signature = query_params.delete("signature").to_s
+        query_params = CGI.parse(uri.query)
+        signature = arr_to_string(query_params.delete("signature"))
         uri.query = params_to_string(query_params)
-        signature == signature_param(uri.to_s, auth_id, auth_key)
+        expected = signature_param(uri.to_s, auth_id, auth_key)
+        signature == expected
       end
 
       def self.signature_param(signed_string, auth_id, auth_key)
@@ -30,8 +31,20 @@ module EY
 
       private
 
+      def self.arr_to_string(arr)
+        if arr.respond_to?(:join)
+          arr = arr.join("")
+        end
+        arr.to_s
+      end
+
       def self.params_to_string(parameters)
-        parameters.sort_by(&:to_s).map {|e| e.map{|str| CGI.escape(str.to_s)}.join '='}.join '&'
+        result = parameters.sort_by(&:to_s).map do |e|
+          e.map do |str| 
+            CGI.escape(arr_to_string(str))
+          end.join '='
+        end.join '&'
+        result
       end
 
       def self.verify_params!(url, extra_params, parameters)

@@ -9,7 +9,7 @@ describe EY::ApiHMAC::BaseConnection do
     describe "on 500" do
       before do
         @connection.backend = lambda do |env|
-          ["500", {}, ""]
+          ["500", {}, [""]]
         end
       end
       it "raises an error" do
