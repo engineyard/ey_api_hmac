@@ -11,7 +11,6 @@ module EY
         @auth_id = auth_id
         @auth_key = auth_key
         @standard_headers = {
-          'CONTENT_TYPE' => 'application/json',
           'Accept' => 'application/json',
           'HTTP_DATE' => Time.now.httpdate,
           'USER_AGENT' => user_agent || default_user_agent
@@ -87,10 +86,11 @@ module EY
 
       def request(method, url, body = nil, &block)
         response = nil
-        request_headers = @standard_headers
+        request_headers = @standard_headers.dup
         if body
           body_json = body.to_json
           request_headers["CONTENT_LENGTH"] = body_json.size.to_s
+          request_headers["CONTENT_TYPE"] = 'application/json'
           response = client.send(method, url, request_headers, body_json)
         else
           response = client.send(method, url, request_headers)
