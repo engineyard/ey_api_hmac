@@ -7,9 +7,10 @@ module EY
     class BaseConnection
       attr_reader :auth_id, :auth_key
 
-      def initialize(auth_id, auth_key, user_agent = nil)
+      def initialize(auth_id, auth_key, user_agent = nil, retries = 10)
         @auth_id = auth_id
         @auth_key = auth_key
+        @retries = retries
         @standard_headers = {
           'Accept' => 'application/json',
           'HTTP_DATE' => Time.now.httpdate,
@@ -20,6 +21,8 @@ module EY
       def default_user_agent
         "ApiHMAC"
       end
+
+      class Timeout < StandardError; end
 
       class NotFound < StandardError
         def initialize(url)
@@ -87,13 +90,19 @@ module EY
       def request(method, url, body = nil, &block)
         response = nil
         request_headers = @standard_headers.dup
+
         if body
           body_json = body.to_json
           request_headers["CONTENT_LENGTH"] = body_json.size.to_s
           request_headers["CONTENT_TYPE"] = 'application/json'
-          response = client.send(method, url, request_headers, body_json)
-        else
-          response = client.send(method, url, request_headers)
+        end
+
+        tries = 0
+        begin
+          tries += 1
+          response = client.send(method, url, request_headers, body ? body_json : {})
+        rescue Errno::ETIMEDOUT => timeout
+          tries <= @retries ? retry : raise(Timeout.new)
         end
         handle_response(url, response, &block)
       rescue => e

@@ -40,5 +40,27 @@ describe EY::ApiHMAC::BaseConnection do
         response[:headers].should eq({"Content-Type" => "application/json"})
       end
     end
+
+    describe "timeout behavior" do
+      it "raises after retry" do
+        @connection.backend = lambda { |env| raise Errno::ETIMEDOUT }
+        lambda { @connection.post('/', "foo") {} }.should raise_exception(EY::ApiHMAC::BaseConnection::Timeout)
+      end
+
+      it "retries on timeout" do
+        @connection.backend = lambda do |env|
+          $num_requests ||= 0
+          $num_requests += 1
+          if $num_requests < 5
+            raise Errno::ETIMEDOUT
+          else
+            ["200", {}, ['ok']]
+          end
+        end
+
+        lambda { @connection.get('/foo') }.should_not raise_exception(EY::ApiHMAC::BaseConnection::Timeout)
+        $num_requests.should == 5
+      end
+    end
   end
 end
