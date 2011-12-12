@@ -61,6 +61,7 @@ module EY
           @app, @auth_id, @auth_key = app, auth_id, auth_key
         end
         def call(env)
+          env['HTTP_DATE'] ||= Time.now.httpdate
           ApiHMAC.sign!(env, @auth_id, @auth_key)
           tuple = @app.call(env)
           if tuple.first.to_i == 401
