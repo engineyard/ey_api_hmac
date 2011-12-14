@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.name        = "ey_api_hmac"
   s.version     = EY::ApiHMAC::VERSION
   s.authors     = ["Jacob Burkhart & Thorben Schröder & David Calavera & others"]
-  s.email       = ["jacob@engineyard.com"]
+  s.email       = ["jacob@engineyard.com", "jlane@engineyard.com", "jrucker@engineyard.com"]
   s.homepage    = ""
   s.summary     = %q{HMAC Rack basic implementation for Engine Yard services}
   s.description = %q{basic wrapper for rack-client + middlewares for HMAC auth + helpers for SSO auth}
