@@ -61,7 +61,6 @@ describe EY::ApiHMAC::ApiAuth do
         'PATH_INFO' => "/path/to/put",
         'QUERY_STRING' => 'foo=bar&bar=foo',
         'CONTENT_TYPE' => 'text/plain',
-        'HTTP_CONTENT_MD5' => 'ac5288d2b98dc9d9eee1f3a47f53b8c3',
         'REQUEST_METHOD' => "PUT",
         'HTTP_DATE' => "Thu, 10 Jul 2008 03:29:56 GMT",
         "rack.input" => StringIO.new("somebody")}
@@ -70,7 +69,7 @@ describe EY::ApiHMAC::ApiAuth do
 
     describe ".canonical_string" do
       it "should generate a canonical string using default method" do
-        expected = "PUT\ntext/plain\nac5288d2b98dc9d9eee1f3a47f53b8c3\nThu, 10 Jul 2008 03:29:56 GMT\n/path/to/put"
+        expected = "PUT\ntext/plain\n78b9d09661da64f0bc6c146c524bae4a\nThu, 10 Jul 2008 03:29:56 GMT\n/path/to/put"
         AuthHMAC.canonical_string(@request).should == expected
         EY::ApiHMAC.canonical_string(@env).should == expected
       end
@@ -78,7 +77,7 @@ describe EY::ApiHMAC::ApiAuth do
 
     describe ".signature" do
       it "should generate a valid signature string for a secret" do
-        expected = "p4F+wQOPa8VsaJbrT66wqSRVdOg="
+        expected = "EGLJlEoCa5s7MDgVZ7tGuIk3s68="
         AuthHMAC.signature(@request, 'secret').should == expected
         EY::ApiHMAC.signature(@env, 'secret').should == expected
       end
@@ -86,7 +85,7 @@ describe EY::ApiHMAC::ApiAuth do
 
     describe "sign!" do
       before do
-        @expected = "AuthHMAC my-key-id:p4F+wQOPa8VsaJbrT66wqSRVdOg="
+        @expected = "AuthHMAC my-key-id:EGLJlEoCa5s7MDgVZ7tGuIk3s68="
       end
 
       it "signs as expected with AuthHMAC" do

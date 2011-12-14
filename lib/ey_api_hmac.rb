@@ -74,11 +74,10 @@ module EY
     private
 
     def self.generated_md5(env)
-      return env['HTTP_CONTENT_MD5'] if env['HTTP_CONTENT_MD5']
       env["rack.input"].rewind
       request_body = env["rack.input"].read
       env["rack.input"].rewind
-      OpenSSL::Digest::MD5.hexdigest(request_body) unless request_body.empty?
+      request_body.empty? ? nil : OpenSSL::Digest::MD5.hexdigest(request_body)
     end
 
   end
