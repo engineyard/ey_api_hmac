@@ -4,6 +4,18 @@ require 'ey_api_hmac'
 require 'auth-hmac'
 require 'rack/contrib'
 require 'time'
+def compatible
+  it "verifies by ApiAuth" do
+    @lookup = Proc.new{ |key| 'secret' if key == 'access key 1' }
+    EY::ApiHMAC.authenticated?(@env, &@lookup).should be_true
+  end
+
+  it "verifies by AuthHMAC" do
+    @authhmac = AuthHMAC.new({"access key 1" => 'secret'})
+    @authhmac.authenticated?(@request).should be_true
+  end
+end
+
 
 describe EY::ApiHMAC::ApiAuth do
 
@@ -49,16 +61,16 @@ describe EY::ApiHMAC::ApiAuth do
         'PATH_INFO' => "/path/to/put",
         'QUERY_STRING' => 'foo=bar&bar=foo',
         'CONTENT_TYPE' => 'text/plain',
-        'HTTP_CONTENT_MD5' => 'd41d8cd98f00b204e9800998ecf8427e',
+        'HTTP_CONTENT_MD5' => 'ac5288d2b98dc9d9eee1f3a47f53b8c3',
         'REQUEST_METHOD' => "PUT",
         'HTTP_DATE' => "Thu, 10 Jul 2008 03:29:56 GMT",
-        "rack.input" => StringIO.new}
+        "rack.input" => StringIO.new("somebody")}
       @request = Rack::Request.new(@env)
     end
 
     describe ".canonical_string" do
       it "should generate a canonical string using default method" do
-        expected = "PUT\ntext/plain\nd41d8cd98f00b204e9800998ecf8427e\nThu, 10 Jul 2008 03:29:56 GMT\n/path/to/put"
+        expected = "PUT\ntext/plain\nac5288d2b98dc9d9eee1f3a47f53b8c3\nThu, 10 Jul 2008 03:29:56 GMT\n/path/to/put"
         AuthHMAC.canonical_string(@request).should == expected
         EY::ApiHMAC.canonical_string(@env).should == expected
       end
@@ -66,7 +78,7 @@ describe EY::ApiHMAC::ApiAuth do
 
     describe ".signature" do
       it "should generate a valid signature string for a secret" do
-        expected = "isJ7zHHPrpnSdZ/XbvqxFhVUf0c="
+        expected = "p4F+wQOPa8VsaJbrT66wqSRVdOg="
         AuthHMAC.signature(@request, 'secret').should == expected
         EY::ApiHMAC.signature(@env, 'secret').should == expected
       end
@@ -74,7 +86,7 @@ describe EY::ApiHMAC::ApiAuth do
 
     describe "sign!" do
       before do
-        @expected = "AuthHMAC my-key-id:isJ7zHHPrpnSdZ/XbvqxFhVUf0c="
+        @expected = "AuthHMAC my-key-id:p4F+wQOPa8VsaJbrT66wqSRVdOg="
       end
 
       it "signs as expected with AuthHMAC" do
@@ -91,34 +103,55 @@ describe EY::ApiHMAC::ApiAuth do
 
     describe "authenticated?" do
       describe "request signed by AuthHMAC" do
-        before do
-          AuthHMAC.sign!(@request, 'access key 1', 'secret')
-          @env["HTTP_AUTHORIZATION"] = @request["Authorization"]
-        end
 
-        it "verifies by ApiAuth" do
-          @lookup = Proc.new{ |key| 'secret' if key == 'access key 1' }
-          EY::ApiHMAC.authenticated?(@env, &@lookup).should be_true
+        describe do
+          before do
+            AuthHMAC.sign!(@request, 'access key 1', 'secret')
+            @env["HTTP_AUTHORIZATION"] = @request["Authorization"]
+          end
+          compatible
         end
-
-        it "verifies by AuthHMAC" do
-          @authhmac = AuthHMAC.new({"access key 1" => 'secret'})
-          @authhmac.authenticated?(@request).should be_true
+        describe "without BODY" do
+          before do
+            @env['rack.input'] = StringIO.new
+            @env.delete('HTTP_CONTENT_MD5')
+            @request = Rack::Request.new(@env)
+            AuthHMAC.sign!(@request, 'access key 1', 'secret')
+            @env["HTTP_AUTHORIZATION"] = @request["Authorization"]
+          end
+          compatible
+        end
+        describe "without CONTENT_TYPE" do
+          before do
+            @env.delete('CONTENT_TYPE')
+            @request = Rack::Request.new(@env)
+            AuthHMAC.sign!(@request, 'access key 1', 'secret')
+            @env["HTTP_AUTHORIZATION"] = @request["Authorization"]
+          end
+          compatible
         end
       end
       describe "request signed by ApiAuth" do
-        before do
-          EY::ApiHMAC.sign!(@env, 'access key 1', 'secret')
+        describe "without content" do
+          before do
+            @env['rack.input'] = StringIO.new
+            @env.delete('HTTP_CONTENT_MD5')
+            EY::ApiHMAC.sign!(@env, 'access key 1', 'secret')
+          end
+          compatible
         end
-
-        it "verifies by ApiAuth" do
-          @lookup = Proc.new{ |key| 'secret' if key == 'access key 1' }
-          EY::ApiHMAC.authenticated?(@env, &@lookup).should be_true
+        describe "without CONTENT_TYPE" do
+          before do
+            @env.delete('CONTENT_TYPE')
+            EY::ApiHMAC.sign!(@env, 'access key 1', 'secret')
+          end
+          compatible
         end
-
-        it "verifies by AuthHMAC" do
-          @authhmac = AuthHMAC.new({"access key 1" => 'secret'})
-          @authhmac.authenticated?(@request).should be_true
+        describe do
+          before do
+            EY::ApiHMAC.sign!(@env, 'access key 1', 'secret')
+          end
+          compatible
         end
       end
     end

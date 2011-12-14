@@ -19,7 +19,7 @@ module EY
         env[var]
       end
       parts << expect["REQUEST_METHOD"]
-      parts << expect["CONTENT_TYPE"]
+      parts << env["CONTENT_TYPE"]
       parts << generated_md5(env)
       parts << expect["HTTP_DATE"]
       if env["REQUEST_URI"]
@@ -74,10 +74,11 @@ module EY
     private
 
     def self.generated_md5(env)
+      return env['HTTP_CONTENT_MD5'] if env['HTTP_CONTENT_MD5']
       env["rack.input"].rewind
       request_body = env["rack.input"].read
       env["rack.input"].rewind
-      OpenSSL::Digest::MD5.hexdigest(request_body)
+      OpenSSL::Digest::MD5.hexdigest(request_body) unless request_body.empty?
     end
 
   end
