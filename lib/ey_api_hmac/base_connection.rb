@@ -5,11 +5,8 @@ require 'time'
 module EY
   module ApiHMAC
     class BaseConnection
-      attr_reader :auth_id, :auth_key
 
-      def initialize(auth_id, auth_key, user_agent = nil)
-        @auth_id = auth_id
-        @auth_key = auth_key
+      def initialize(user_agent = nil)
         @standard_headers = {
           'Accept' => 'application/json',
           'HTTP_DATE' => Time.now.httpdate,
@@ -41,7 +38,10 @@ module EY
       end
 
       class UnknownError < StandardError
+        attr_reader :response
+
         def initialize(response)
+          @response = response
           super("unknown error(#{response.status}): #{response.body}")
         end
       end
@@ -75,11 +75,7 @@ module EY
 
       def client
         bak = self.backend
-        #damn you scope!
-        auth_id_arg = auth_id
-        auth_key_arg = auth_key
         @client ||= Rack::Client.new do
-          use EY::ApiHMAC::ApiAuth::Client, auth_id_arg, auth_key_arg
           run bak
         end
       end

@@ -1,9 +1,9 @@
 require "spec_helper"
 require 'ey_api_hmac'
 
-describe EY::ApiHMAC::BaseConnection do
+describe EY::ApiHMAC::AuthedConnection do
   before do
-    @connection = EY::ApiHMAC::BaseConnection.new("123", "456")
+    @connection = EY::ApiHMAC::AuthedConnection.new("123", "456")
   end
   describe "handle_error" do
     describe "on 500" do

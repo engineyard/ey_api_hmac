@@ -1,4 +1,4 @@
-require 'ey_api_hmac/base_connection'
+require 'ey_api_hmac/authed_connection'
 require 'ey_api_hmac/api_auth'
 require 'ey_api_hmac/sso'
 
