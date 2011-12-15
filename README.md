@@ -30,3 +30,33 @@ Rack-Client middleware:
 ```
 
 this will add the correct Authorization header to all requests made with this rack-client.
+
+# Imlementation details:
+
+before signed:
+
+    {"REQUEST_URI"=>"http://example.com/api/1/service_accounts/1324/messages", "PATH_INFO"=>"/api/1/service_accounts/1324/messages", "CONTENT_TYPE"=>"application/json", "HTTP_ACCEPT"=>"application/json", "REQUEST_METHOD"=>"POST", "HTTP_DATE"=>"Thu, 15 Dec 2011 23:50:33 GMT", "rack.input"=>#<StringIO:0x007fd9239f6998>}
+
+request body:
+
+    {"message":{"message_type":"status","subject":"Everything looks good.","body":null}}
+
+auth_id:
+
+    123bc211233eabc
+
+auth_key:
+
+    abc474e3fc9bddf6d41236b70cc5a952f3681166e1239214740d13eecd12318f7b8d27123b61eabc
+
+canonical_string:
+
+    "POST\napplication/json\ne8fa80541e3726e2cf4c71d07a7bd9fd\nThu, 15 Dec 2011 23:50:33 GMT\n/api/1/service_accounts/1324/messages"
+
+signature:
+
+    UZDkXszu4dp6Gz2TEGcy/cVt0R0=
+
+now signed:
+
+    {"REQUEST_URI"=>"http://example.com/api/1/service_accounts/1324/messages", "PATH_INFO"=>"/api/1/service_accounts/1324/messages", "CONTENT_TYPE"=>"application/json", "HTTP_ACCEPT"=>"application/json", "REQUEST_METHOD"=>"POST", "HTTP_DATE"=>"Thu, 15 Dec 2011 23:50:33 GMT", "rack.input"=>#<StringIO:0x007fd9239f6998>, "HTTP_AUTHORIZATION"=>"AuthHMAC 123bc211233eabc:UZDkXszu4dp6Gz2TEGcy/cVt0R0="}
