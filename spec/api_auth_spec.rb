@@ -213,6 +213,19 @@ describe EY::ApiHMAC::ApiAuth do
 
         lambda { client.get('/') }.should raise_error(EY::ApiHMAC::ApiAuth::Client::AuthFailure)
       end
+
+      it "fails but does not raise when quiet is enabled" do
+        client = Rack::Client.new('http://localhost') do
+          use Rack::Config do |env|
+            env['HTTP_DATE'] = Time.now.httpdate
+          end
+          use EY::ApiHMAC::ApiAuth::Client, 1, 'diffkey', true
+          run MockApp.call(true, 'key')
+        end
+
+        client.get("/").status.should == 401
+
+      end
     end
   end
 

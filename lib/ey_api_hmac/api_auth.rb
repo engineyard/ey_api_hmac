@@ -57,13 +57,13 @@ module EY
         class AuthFailure < RuntimeError
         end
 
-        def initialize(app, auth_id, auth_key)
-          @app, @auth_id, @auth_key = app, auth_id, auth_key
+        def initialize(app, auth_id, auth_key, quiet=false)
+          @app, @auth_id, @auth_key, @quiet = app, auth_id, auth_key, quiet
         end
         def call(env)
           ApiHMAC.sign!(env, @auth_id, @auth_key)
           tuple = @app.call(env)
-          if tuple.first.to_i == 401
+          if !@quiet && tuple.first.to_i == 401
             response_body = ""
             tuple.last.each{ |v| response_body << v }
             raise AuthFailure, "HMAC Authentication Failed: #{response_body}"
