@@ -19,7 +19,7 @@ module EY
               @lookup.call(env, auth_id)
             end
           rescue HmacAuthFail => e
-            return [401, {}, ["Authentication failure: #{e.message}"]]
+            return [401, {"Content-Type" => "text/plain"}, ["Authentication failure: #{e.message}"]]
           end
           @app.call(env)
         end
