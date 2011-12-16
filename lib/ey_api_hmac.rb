@@ -25,7 +25,7 @@ module EY
       if env["REQUEST_URI"]
         parts << URI.parse(env["REQUEST_URI"]).path
       else
-        parts << expect["PATH_INFO"]
+        parts << (env["SCRIPT_NAME"] + expect["PATH_INFO"])
       end
       parts.join("\n")
     end

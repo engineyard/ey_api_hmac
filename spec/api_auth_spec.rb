@@ -73,6 +73,14 @@ describe EY::ApiHMAC::ApiAuth do
         AuthHMAC.canonical_string(@request).should == expected
         EY::ApiHMAC.canonical_string(@env).should == expected
       end
+      it "should generate a canonical string with SCRIPT_NAME" do
+        env = @env.merge("SCRIPT_NAME" => "/api")
+        env.delete("REQUEST_URI")
+        expected = "PUT\ntext/plain\n78b9d09661da64f0bc6c146c524bae4a\nThu, 10 Jul 2008 03:29:56 GMT\n/api/path/to/put"
+        request = Rack::Request.new(env)
+        AuthHMAC.canonical_string(request).should == expected
+        EY::ApiHMAC.canonical_string(env).should == expected
+      end
     end
 
     describe ".signature" do
