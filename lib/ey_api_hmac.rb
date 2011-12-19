@@ -10,7 +10,7 @@ module EY
       env["HTTP_AUTHORIZATION"] = auth_string(key_id, signature(env, secret))
     end
 
-    def self.canonical_string(env)
+    def self.canonical_string(env, legacy = false)
       parts = []
       expect = Proc.new do |var|
         unless env[var]
@@ -20,7 +20,7 @@ module EY
       end
       parts << expect["REQUEST_METHOD"]
       parts << env["CONTENT_TYPE"]
-      parts << generated_md5(env)
+      parts << generated_md5(env, legacy)
       parts << expect["HTTP_DATE"]
       if env["REQUEST_URI"]
         parts << URI.parse(env["REQUEST_URI"]).path
@@ -36,6 +36,10 @@ module EY
 
     def self.signature(env, secret)
       base64digest(canonical_string(env), secret)
+    end
+
+    def self.signature_legacy(env, secret)
+      base64digest(canonical_string(env, true), secret)
     end
 
     def self.base64digest(data,secret)
@@ -54,7 +58,7 @@ module EY
         unless secret
           raise HmacAuthFail, "couldn't find auth for #{access_key_id}"
         end
-        unless hmac == signature(env, secret)
+        unless hmac == signature(env, secret) || hmac == signature_legacy(env, secret)
           raise HmacAuthFail, "signature mismatch. Calculated canonical_string: #{canonical_string(env).inspect}"
         end
       else
@@ -73,11 +77,15 @@ module EY
 
     private
 
-    def self.generated_md5(env)
+    def self.generated_md5(env, legacy = false)
       env["rack.input"].rewind
       request_body = env["rack.input"].read
       env["rack.input"].rewind
-      request_body.empty? ? nil : OpenSSL::Digest::MD5.hexdigest(request_body)
+      if legacy
+        OpenSSL::Digest::MD5.hexdigest(request_body)
+      else
+        request_body.empty? ? nil : OpenSSL::Digest::MD5.hexdigest(request_body)
+      end
     end
 
   end

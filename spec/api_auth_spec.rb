@@ -109,8 +109,17 @@ describe EY::ApiHMAC::ApiAuth do
     end
 
     describe "authenticated?" do
-      describe "request signed by AuthHMAC" do
 
+      it "verifies the old signing method without body" do
+        @env['rack.input'] = StringIO.new
+        @env.delete('HTTP_CONTENT_MD5')
+        @request = Rack::Request.new(@env)
+        @env["HTTP_AUTHORIZATION"] = "AuthHMAC access key 1:isJ7zHHPrpnSdZ/XbvqxFhVUf0c="
+        @lookup = Proc.new{ |key| 'secret' if key == 'access key 1' }
+        EY::ApiHMAC.authenticated?(@env, &@lookup).should be_true
+      end
+
+      describe "request signed by AuthHMAC" do
         describe do
           before do
             AuthHMAC.sign!(@request, 'access key 1', 'secret')
