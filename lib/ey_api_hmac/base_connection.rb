@@ -110,6 +110,8 @@ module EY
           if block_given?
             json_body = JSON.parse(response.body)
             yield json_body, response["Location"]
+          else
+            response
           end
         when 404
           raise NotFound.new(url)
