@@ -76,6 +76,7 @@ module EY
       def client
         bak = self.backend
         @client ||= Rack::Client.new do
+          use Rack::Idempotent
           run bak
         end
       end
