@@ -24,6 +24,9 @@ Rack-Client middleware:
 
 ```ruby
   client = Rack::Client.new do
+    use Rack::Config do |env|
+      env['HTTP_DATE'] = Time.now.httpdate
+    end
     use EY::ApiHMAC::ApiAuth::Client, auth_id_arg, auth_key_arg
     run Rack::Client::Handler::NetHTTP
   end
