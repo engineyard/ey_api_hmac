@@ -1,4 +1,5 @@
 require 'rack/client'
+require 'rack-idempotent'
 require 'json'
 require 'time'
 
@@ -6,12 +7,15 @@ module EY
   module ApiHMAC
     class BaseConnection
 
+      attr_accessor :middlewares
+
       def initialize(user_agent = nil)
         @standard_headers = {
           'Accept' => 'application/json',
           'HTTP_DATE' => Time.now.httpdate,
           'USER_AGENT' => user_agent || default_user_agent
         }
+        self.middlewares = [Rack::Idempotent]
       end
 
       def default_user_agent
@@ -74,10 +78,14 @@ module EY
     protected
 
       def client
-        bak = self.backend
+        #damn you scope!
+        backend = self.backend
+        middlewares = self.middlewares
         @client ||= Rack::Client.new do
-          use Rack::Idempotent
-          run bak
+          middlewares.each do |middleware|
+            use *Array(middleware)
+          end
+          run backend
         end
       end
 

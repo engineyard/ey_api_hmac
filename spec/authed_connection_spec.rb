@@ -9,7 +9,7 @@ describe EY::ApiHMAC::AuthedConnection do
     describe "on 500" do
       before do
         @connection.backend = lambda do |env|
-          ["500", {}, [""]]
+          [500, {}, [""]]
         end
       end
       it "raises an error" do
@@ -24,7 +24,7 @@ describe EY::ApiHMAC::AuthedConnection do
     describe "on bad body" do
       it "calls the error handler" do
         @connection.backend = lambda do |env|
-          ["200", {"Content-Type" => "application/json"}, ["200 OK"]]
+          [200, {"Content-Type" => "application/json"}, ["200 OK"]]
         end
         errors = []
         @connection.handle_errors_with{|*args| errors << args; false}
@@ -39,6 +39,16 @@ describe EY::ApiHMAC::AuthedConnection do
         response[:body].should eq("200 OK")
         response[:headers].should eq({"Content-Type" => "application/json"})
       end
+    end
+  end
+  describe "uses Rack Idempotent" do
+    before do
+      @connection.backend = lambda do |env|
+        [408, {}, [""]]
+      end
+    end
+    it "raises an error" do
+      lambda { @connection.get("/") }.should raise_exception(Rack::Idempotent::RetryLimitExceeded)
     end
   end
 end

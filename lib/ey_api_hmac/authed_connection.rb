@@ -9,19 +9,7 @@ module EY
         @auth_id = auth_id
         @auth_key = auth_key
         super(user_agent)
-      end
-
-    protected
-
-      def client
-        bak = self.backend
-        #damn you scope!
-        auth_id_arg = auth_id
-        auth_key_arg = auth_key
-        @client ||= Rack::Client.new do
-          use EY::ApiHMAC::ApiAuth::Client, auth_id_arg, auth_key_arg
-          run bak
-        end
+        self.middlewares.unshift [EY::ApiHMAC::ApiAuth::Client, auth_id, auth_key]
       end
 
     end

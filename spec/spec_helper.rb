@@ -1,3 +1,5 @@
+require 'pry'
+
 class MockAuth
   def initialize(is_found, auth_key)
     @is_found = is_found
