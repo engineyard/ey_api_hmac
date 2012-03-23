@@ -122,6 +122,12 @@ module EY
           else
             response
           end
+        when 204
+          if block_given?
+            yield({}, response["Location"])
+          else
+            response
+          end
         when 404
           raise NotFound.new(url)
         when 400

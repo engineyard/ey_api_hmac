@@ -51,4 +51,14 @@ describe EY::ApiHMAC::AuthedConnection do
       lambda { @connection.get("/") }.should raise_exception(Rack::Idempotent::RetryLimitExceeded)
     end
   end
+  describe "204" do
+    before do
+      @connection.backend = lambda do |env|
+        [204, {}, []]
+      end
+    end
+    it "works" do
+      @connection.get("/"){|a,b| a }.should eq({})
+    end
+  end
 end
