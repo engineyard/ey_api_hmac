@@ -17,16 +17,26 @@ module EY
 
       def self.authenticate!(url, &lookup)
         uri = URI.parse(url)
-        return false unless uri.query
+        unless uri.query
+          raise HmacAuthFail, "Url has no query"
+        end
         parameters = CGI.parse(uri.query)
         signature = parameters["signature"]
+        unless signature
+          raise HmacAuthFail, "Url has no signature"
+        end
         return false unless signature
         signature = signature.first
         if md = Regexp.new("AuthHMAC ([^:]+):(.+)$").match(signature)
           access_key_id = md[1]
           hmac = md[2]
           secret = lookup.call(access_key_id)
-          authenticated?(url, access_key_id, secret) && access_key_id
+          unless authenticated?(url, access_key_id, secret)
+            raise HmacAuthFail, "Authentication failed for #{access_key_id}"
+          end
+          access_key_id
+        else
+          raise HmacAuthFail, "Incorrect signature"
         end
       end
 

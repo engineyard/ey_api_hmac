@@ -46,16 +46,24 @@ describe EY::ApiHMAC do
         EY::ApiHMAC::SSO.authenticate!(signed_url, &@auth_key_lookup).should eq @auth_id
       end
 
-      it "returns unauthorized when url is tainted" do
+      it "unauthorized when url is tainted" do
         signed_url = EY::ApiHMAC::SSO.sign(@url, @parameters, @auth_id, @auth_key)
         signed_url.gsub!("bar","baz")
-        EY::ApiHMAC::SSO.authenticate!(signed_url, &@auth_key_lookup).should be_false
+        lambda{
+          EY::ApiHMAC::SSO.authenticate!(signed_url, &@auth_key_lookup).should be_false
+        }.should raise_error(EY::ApiHMAC::HmacAuthFail)
       end
 
-      it "returns unauthorized with crappy urls" do
-        EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test", &@auth_key_lookup).should be_false
-        EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test?foo=bar", &@auth_key_lookup).should be_false
-        EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test?signature=baz", &@auth_key_lookup).should be_false
+      it "unauthorized with crappy urls" do
+        lambda{
+          EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test", &@auth_key_lookup)
+        }.should raise_error(EY::ApiHMAC::HmacAuthFail)
+        lambda{
+          EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test?foo=bar", &@auth_key_lookup)
+        }.should raise_error(EY::ApiHMAC::HmacAuthFail)
+        lambda{
+          EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test?signature=baz", &@auth_key_lookup)
+        }.should raise_error(EY::ApiHMAC::HmacAuthFail)
       end
 
     end
