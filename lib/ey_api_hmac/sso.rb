@@ -31,6 +31,9 @@ module EY
           access_key_id = md[1]
           hmac = md[2]
           secret = lookup.call(access_key_id)
+          unless secret
+            raise HmacAuthFail, "Authentication failed (lookup didn't find #{access_key_id})"
+          end
           unless authenticated?(url, access_key_id, secret)
             raise HmacAuthFail, "Authentication failed for #{access_key_id}"
           end

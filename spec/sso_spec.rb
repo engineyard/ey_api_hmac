@@ -54,6 +54,12 @@ describe EY::ApiHMAC do
         }.should raise_error(EY::ApiHMAC::HmacAuthFail)
       end
 
+      it "unauthorized when lookup fails" do
+        lambda{
+          EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test"){|x| false}
+        }.should raise_error(EY::ApiHMAC::HmacAuthFail)
+      end
+
       it "unauthorized with crappy urls" do
         lambda{
           EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test", &@auth_key_lookup)
