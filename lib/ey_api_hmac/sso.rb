@@ -15,6 +15,21 @@ module EY
         uri.to_s
       end
 
+      def self.authenticate!(url, &lookup)
+        uri = URI.parse(url)
+        return false unless uri.query
+        parameters = CGI.parse(uri.query)
+        signature = parameters["signature"]
+        return false unless signature
+        signature = signature.first
+        if md = Regexp.new("AuthHMAC ([^:]+):(.+)$").match(signature)
+          access_key_id = md[1]
+          hmac = md[2]
+          secret = lookup.call(access_key_id)
+          authenticated?(url, access_key_id, secret) && access_key_id
+        end
+      end
+
       def self.authenticated?(url, auth_id, auth_key)
         uri = URI.parse(url)
         return false unless uri.query

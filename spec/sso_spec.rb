@@ -35,6 +35,31 @@ describe EY::ApiHMAC do
       EY::ApiHMAC::SSO.authenticated?(signed_url + 'a',  @auth_id, @auth_key).should be_false
     end
 
+    describe "extracting auth_id and validating in the same call" do
+      before do
+        @auth_key_lookup = Proc.new do |auth_id|
+          (auth_id == @auth_id) && @auth_key
+        end
+      end
+      it "works" do
+        signed_url = EY::ApiHMAC::SSO.sign(@url, @parameters, @auth_id, @auth_key)
+        EY::ApiHMAC::SSO.authenticate!(signed_url, &@auth_key_lookup).should eq @auth_id
+      end
+
+      it "returns unauthorized when url is tainted" do
+        signed_url = EY::ApiHMAC::SSO.sign(@url, @parameters, @auth_id, @auth_key)
+        signed_url.gsub!("bar","baz")
+        EY::ApiHMAC::SSO.authenticate!(signed_url, &@auth_key_lookup).should be_false
+      end
+
+      it "returns unauthorized with crappy urls" do
+        EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test", &@auth_key_lookup).should be_false
+        EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test?foo=bar", &@auth_key_lookup).should be_false
+        EY::ApiHMAC::SSO.authenticate!("http://example.com/sign_test?signature=baz", &@auth_key_lookup).should be_false
+      end
+
+    end
+
     it "can verify requests with no query as invalid" do
       EY::ApiHMAC::SSO.authenticated?("http://example.com/sign_test",  @auth_id, @auth_key).should be_false
     end
