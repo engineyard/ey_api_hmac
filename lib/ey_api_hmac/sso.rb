@@ -11,7 +11,8 @@ module EY
         end
         uri.query = params_to_string(parameters)
         signature = CGI.escape(signature_param(uri.to_s, auth_id, auth_key))
-        uri.query += "&signature=#{signature}"
+        sig_param = uri.query.empty? ? "signature=#{signature}" : "&signature=#{signature}"
+        uri.query += sig_param
         uri.to_s
       end
 
