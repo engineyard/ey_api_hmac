@@ -100,6 +100,11 @@ module EY
         else
           response = client.send(method, url, request_headers)
         end
+        class << response
+          def json
+            JSON.parse(self.body)
+          end
+        end
         handle_response(url, response, &block)
       rescue => e
         request_hash = {:method => method, :url => url, :headers => request_headers, :body => body}
@@ -117,8 +122,7 @@ module EY
         case response.status
         when 200, 201
           if block_given?
-            json_body = JSON.parse(response.body)
-            yield json_body, response["Location"]
+            yield response.json, response["Location"]
           else
             response
           end
