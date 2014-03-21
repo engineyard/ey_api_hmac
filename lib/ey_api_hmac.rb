@@ -43,7 +43,7 @@ module EY
     end
 
     def self.base64digest(data,secret)
-      digest = OpenSSL::Digest::Digest.new('sha1')
+      digest = OpenSSL::Digest.new('sha1')
       [OpenSSL::HMAC.digest(digest, secret, data)].pack('m').strip
     end
 
