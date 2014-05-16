@@ -67,8 +67,8 @@ module EY
         request(:delete, url, &block)
       end
 
-      def get(url, &block)
-        request(:get, url, &block)
+      def get(url, body = nil, &block)
+        request(:get, url, body, &block)
       end
 
       def handle_errors_with(&error_handler)
@@ -96,9 +96,9 @@ module EY
           body_json = body.to_json
           request_headers["CONTENT_LENGTH"] = body_json.size.to_s
           request_headers["CONTENT_TYPE"] = 'application/json'
-          response = client.send(method, url, request_headers, body_json)
+          response = client.request(method.to_s.upcase, url, request_headers, body_json)
         else
-          response = client.send(method, url, request_headers)
+          response = client.request(method.to_s.upcase, url, request_headers)
         end
         class << response
           def json
