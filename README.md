@@ -2,6 +2,10 @@
 
 HMAC basic implementation for Engine Yard services.
 
+# Releasing
+
+This gem is released to https://rubygems.org
+
 # How to use it
 
 Server Rack middleware:
