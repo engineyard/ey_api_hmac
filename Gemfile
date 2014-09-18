@@ -5,10 +5,10 @@ gemspec
 
 gem 'rake'
 gem 'json'
+gem 'rack-client', github: 'workplacesystems/rack-client', branch: 'divergence'
 
 group :test, :development do
   gem 'pry'
   gem 'halorgium-auth-hmac'
-  gem 'rack-client'
   gem 'rack-contrib'
 end
